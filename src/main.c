@@ -1,8 +1,21 @@
 #include <stdio.h>
-#include "main.h"
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+
+#include "reader.h"
+#include "analyzer.h"
 
 int main(void){
-    printf("Hello\n");
-    return hello();
-    // return 0;
+    readerInit();
+    analyzerInit();
+
+    // while (1){
+    //     readData();
+    //     sleep(1);
+    // }
+    
+    pthread_exit(NULL);
+    return 0;
 }

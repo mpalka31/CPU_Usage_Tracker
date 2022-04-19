@@ -12,7 +12,6 @@ pthread_t readetThreadID;
 char* rawData;
 pthread_mutex_t rawDataMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t rawDataReadyCond = PTHREAD_COND_INITIALIZER;
-bool rawDataReady = false;
 int rawDataSize;
 
 void readerInit(void){
@@ -32,17 +31,13 @@ void readData(void){
         rawData = (char*)malloc(rawDataSize);
         fread(rawData, 1, rawDataSize, ptr);
         fclose(ptr);
-        // printf("%s", rawData);
         pthread_cond_signal(&rawDataReadyCond);
-        // rawDataReady = true;
         pthread_mutex_unlock(&rawDataMutex);
-        // free(rawData);
     }
 }
 
 void* readerThread(void *arg){
     while (1){
         readData();
-        sleep(1);
     }
 }

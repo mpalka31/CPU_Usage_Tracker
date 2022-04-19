@@ -17,5 +17,6 @@ int main(void){
     // }
     
     pthread_exit(NULL);
+    analyzerDeInit();
     return 0;
 }

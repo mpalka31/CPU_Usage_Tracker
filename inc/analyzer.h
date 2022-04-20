@@ -1,12 +1,31 @@
 #ifndef ANALYZER_H
 #define ANALYZER_H
 
+#define CPU_ID_LEN    24
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <stdbool.h>
+
+#include "reader.h"
 
 typedef struct CpuUsage {
-    char name[24];
+    char name[CPU_ID_LEN];
     float usage;
 } CpuUsage;
-CpuUsage* cpuUsageTab;
+
+typedef struct CpuUsageNodeData{
+    int cores;
+    CpuUsage* cpuUsageTab_p;
+}CpuUsageNodeData;
+
+void cpuUsageQueueAdd(CpuUsageNodeData** newNodeData);
+CpuUsageNodeData* cpuUsageQueueRead(void);
+int cpuUsageQueueDelete(void);
+
 
 void analyzerInit(void);
 void analyzerDeInit(void);

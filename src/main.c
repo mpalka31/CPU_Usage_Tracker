@@ -16,7 +16,13 @@ int main(void){
     //     sleep(1);
     // }
     
-    pthread_exit(NULL);
+    // pthread_exit(NULL);
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t lineSize = 0;
+    lineSize = getline(&line, &len, stdin);
+    free(line);
     analyzerDeInit();
+    readerDeInit();
     return 0;
 }

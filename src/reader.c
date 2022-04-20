@@ -42,6 +42,6 @@ void readData(void){
 void* readerThread(void *arg){
     while (1){
         readData();
-        usleep(1000000);
+        usleep(100000);
     }
 }

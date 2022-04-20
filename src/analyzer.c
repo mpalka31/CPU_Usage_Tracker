@@ -63,11 +63,11 @@ void* analyzerThread(void *arg){
         data->cores=cpus;
         cpuUsageQueueAdd(&data);
         CpuUsageNodeData* tempp;
-        tempp = cpuUsageQueueRead();
-        for(int i = 0; i<13; i++){
-            printf("%s\t%.2f\n", (tempp->cpuUsageTab_p)[i].name, (tempp->cpuUsageTab_p)[i].usage);
-        }
-        cpuUsageQueueDelete();
+        // tempp = cpuUsageQueueRead();
+        // for(int i = 0; i<13; i++){
+        //     printf("%s\t%.2f\n", (tempp->cpuUsageTab_p)[i].name, (tempp->cpuUsageTab_p)[i].usage);
+        // }
+        // cpuUsageQueueDelete();
         firstRun = false;
         fclose(tempData);
         tempData=NULL;
@@ -79,9 +79,12 @@ void* analyzerThread(void *arg){
 }
 
 bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p){
+    char cpu[CPU_ID_LEN]={0};
+    unsigned long long int user, nice, system, idle, ioWait, irq, softIrq, steal, guest, guestNice;
+    int matched = fscanf(tempData, "%s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", cpu, &user, &nice, &system, &idle, &ioWait, &irq, &softIrq, &steal, &guest, &guestNice);
+    if((strncmp(cpu, "cpu", 3)!=0)||(matched!=11)) return false;
     if(firstRun){
         cpus = id+1;
-
         CpuStat* cpuStatTabCur_temp=calloc(cpus, sizeof(CpuStat));
         memcpy(cpuStatTabCur_temp, cpuStatTabCur, id*sizeof(CpuStat));
         free(cpuStatTabCur);
@@ -97,10 +100,6 @@ bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p){
         free(*cpuUsageTab_p);
         *cpuUsageTab_p=cpuUsageTab_temp;
     }
-    char cpu[CPU_ID_LEN]={0};
-    unsigned long long int user, nice, system, idle, ioWait, irq, softIrq, steal, guest, guestNice;
-    int matched = fscanf(tempData, "%s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", cpu, &user, &nice, &system, &idle, &ioWait, &irq, &softIrq, &steal, &guest, &guestNice);
-    if((strncmp(cpu, "cpu", 3)!=0)||(matched!=11)) return false;
     
     memcpy(&cpuStatTabPrew[id], &cpuStatTabCur[id], sizeof(CpuStat));
     cpuStatTabCur[id].idleTime = idle + ioWait;

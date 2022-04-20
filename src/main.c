@@ -6,10 +6,12 @@
 
 #include "reader.h"
 #include "analyzer.h"
+#include "analyzer.h"
 
 int main(void){
     readerInit();
     analyzerInit();
+    printerInit();
 
     // while (1){
     //     readData();

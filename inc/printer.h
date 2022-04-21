@@ -11,8 +11,8 @@
 
 #include "analyzer.h"
 
-void printerInit();
-void printerDeInit();
+void printerInit(void);
+void printerDeInit(void);
 
 
 #endif

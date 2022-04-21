@@ -8,6 +8,8 @@ struct timeval tv;
 unsigned long timestamp1;// = 1000000 * tv.tv_sec + tv.tv_usec;
 unsigned long timestamp2;
 
+extern pthread_mutex_t cpuUsageNodeDataMutex;
+
 void printerInit(){
     pthread_create(&printerThreadID, NULL, printerThread, (void*)NULL);
 }
@@ -24,6 +26,7 @@ void* printerThread(void *arg){
         CpuUsage* tempUsage;
         int cnt=0;
         int cores;
+        pthread_mutex_lock(&cpuUsageNodeDataMutex);
         while((tempNodeData = cpuUsageQueueRead())!=NULL){
             if(cnt==0){
                 cores = tempNodeData->cores;
@@ -36,12 +39,14 @@ void* printerThread(void *arg){
             cnt++;
             cpuUsageQueueDelete();
         }
+        pthread_mutex_unlock(&cpuUsageNodeDataMutex);
+        system("clear");
+        printf("PRESS ENTER TO EXIT\n\n");
         for(int i = 0; i<cores; i++){
             tempUsage[i].usage=tempUsage[i].usage/(float)cnt;
-            printf("%s\t%.2f\n", tempUsage[i].name, tempUsage[i].usage);
+            printf("%s\tusage:\t%.2f%%\n", tempUsage[i].name, tempUsage[i].usage);
         }
         free(tempUsage);
         timestamp2 = 1000000 * tv.tv_sec + tv.tv_usec;
-        printf("%ld\n", timestamp2-timestamp1);
     }
 }

@@ -21,6 +21,8 @@ static bool firstRun = true;
 static int cpus = 0;
 pthread_t analyzerThreadID;
 
+pthread_mutex_t cpuUsageNodeDataMutex = PTHREAD_MUTEX_INITIALIZER;
+
 FILE* tempData = NULL;
 
 extern pthread_mutex_t rawDataMutex;
@@ -36,6 +38,7 @@ void analyzerInit(void){
 
 void analyzerDeInit(void){
     pthread_cancel(analyzerThreadID);
+    pthread_mutex_destroy(&cpuUsageNodeDataMutex);
     if(tempData!=NULL) fclose(tempData);
     if(cpuStatTabPrew!=NULL) free(cpuStatTabPrew);
     if(cpuStatTabCur!=NULL) free(cpuStatTabCur);
@@ -61,13 +64,11 @@ void* analyzerThread(void *arg){
             id++;
         }
         data->cores=cpus;
+
+        pthread_mutex_lock(&cpuUsageNodeDataMutex);
         cpuUsageQueueAdd(&data);
-        CpuUsageNodeData* tempp;
-        // tempp = cpuUsageQueueRead();
-        // for(int i = 0; i<13; i++){
-        //     printf("%s\t%.2f\n", (tempp->cpuUsageTab_p)[i].name, (tempp->cpuUsageTab_p)[i].usage);
-        // }
-        // cpuUsageQueueDelete();
+        pthread_mutex_unlock(&cpuUsageNodeDataMutex);
+
         firstRun = false;
         fclose(tempData);
         tempData=NULL;
@@ -109,6 +110,8 @@ bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p){
     memcpy((*cpuUsageTab_p)[id].name, cpu, CPU_ID_LEN);
     return true;
 }
+
+/*************************************************************/
 
 typedef struct CpuUsageNode CpuUsageNode;
 typedef struct CpuUsageNode{

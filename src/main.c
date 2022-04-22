@@ -18,23 +18,27 @@ int main(void){
     readerInit();
     analyzerInit();
     printerInit();
-    signal(SIGINT, sigHendler);
-    signal(SIGTERM, sigHendler);
+
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = sigHendler;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
     
     char c=getc(stdin);
-
-    analyzerDeInit();
-    readerDeInit();
-    printerDeInit();
+    
+    readerDeinit();
+    analyzerDeinit();
+    printerDeinit();
     printf("\nUSER TERMINATE\n");
     return 0;
 }
 
 void sigHendler(int sig){
     if((sig==SIGINT)||(sig==SIGTERM)){
-        analyzerDeInit();
-        readerDeInit();
-        printerDeInit();
+        readerDeinit();
+        analyzerDeinit();
+        printerDeinit();
         printf("\nSIGNAL TERMINATE\n");
         exit(0);
     }

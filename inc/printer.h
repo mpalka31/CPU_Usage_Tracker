@@ -8,11 +8,13 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/time.h>
+#include <math.h>
+
 
 #include "analyzer.h"
 
 void printerInit(void);
-void printerDeInit(void);
+void printerDeinit(void);
 
 
 #endif

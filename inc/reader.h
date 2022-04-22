@@ -7,9 +7,17 @@
 #include <string.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <semaphore.h>
+
+#define RING_BUFF_SIZE 256
+
+void rawDataRingBufferInit(void);
+void rawDataRingBufferDeinit(void);
+void rawDataRingBufferPut(char** dataPut, unsigned int dataSizePut);
+unsigned int rawDataRingBufferGet(char** dataGet);
 
 void readerInit(void);
-void readerDeInit(void);
+void readerDeinit(void);
 void* readerThread(void *arg);
 
 #endif

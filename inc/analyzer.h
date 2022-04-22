@@ -28,7 +28,7 @@ int cpuUsageQueueDelete(void);
 
 
 void analyzerInit(void);
-void analyzerDeInit(void);
+void analyzerDeinit(void);
 void* analyzerThread(void *arg);
 
 #endif

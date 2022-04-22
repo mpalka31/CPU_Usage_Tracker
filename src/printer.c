@@ -5,7 +5,7 @@ pthread_t printerThreadID;
 
 void* printerThread(void *arg);
 struct timeval tv;
-unsigned long timestamp1;// = 1000000 * tv.tv_sec + tv.tv_usec;
+unsigned long timestamp1;
 unsigned long timestamp2;
 
 extern pthread_mutex_t cpuUsageNodeDataMutex;
@@ -14,7 +14,7 @@ void printerInit(){
     pthread_create(&printerThreadID, NULL, printerThread, (void*)NULL);
 }
 
-void printerDeInit(){
+void printerDeinit(){
     pthread_cancel(printerThreadID);
 }
 
@@ -34,7 +34,9 @@ void* printerThread(void *arg){
             }
             for(int i = 0; i < cores; i++){
                 memcpy(tempUsage[i].name, (tempNodeData->cpuUsageTab_p)[i].name, CPU_ID_LEN);
-                tempUsage[i].usage=tempUsage[i].usage+(tempNodeData->cpuUsageTab_p)[i].usage;
+                if(!isnan((tempNodeData->cpuUsageTab_p)[i].usage)){
+                    tempUsage[i].usage=tempUsage[i].usage+(tempNodeData->cpuUsageTab_p)[i].usage;
+                }
             }
             cnt++;
             cpuUsageQueueDelete();

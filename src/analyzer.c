@@ -24,19 +24,16 @@ pthread_t analyzerThreadID;
 pthread_mutex_t cpuUsageNodeDataMutex = PTHREAD_MUTEX_INITIALIZER;
 
 FILE* tempData = NULL;
+char* rawDataPtr=NULL;
 
-extern pthread_mutex_t rawDataMutex;
-extern pthread_cond_t rawDataReadyCond;
-extern char* rawData;
-extern int rawDataSize;
-
+void getData(void);
 bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p);
 
 void analyzerInit(void){
     pthread_create(&analyzerThreadID, NULL, analyzerThread, (void*)NULL);
 }
 
-void analyzerDeInit(void){
+void analyzerDeinit(void){
     pthread_cancel(analyzerThreadID);
     pthread_mutex_destroy(&cpuUsageNodeDataMutex);
     if(tempData!=NULL) fclose(tempData);
@@ -45,38 +42,43 @@ void analyzerDeInit(void){
     while(1){
         if(!cpuUsageQueueDelete())break;
     }
+    rawDataRingBufferDeinit();
 }
 
 void* analyzerThread(void *arg){
     while(1){
-        pthread_mutex_lock(&rawDataMutex);
-        while(rawData==NULL){
-            pthread_cond_wait(&rawDataReadyCond, &rawDataMutex);
-        }
-        tempData = fmemopen(rawData, rawDataSize, "r");
-        
-        int id=0;
-        CpuUsageNodeData*  data = calloc(1, sizeof(CpuUsageNodeData));
-        data->cpuUsageTab_p = calloc(cpus,sizeof(CpuUsage));
-        while(1){
-
-            if(!cpuParser(tempData, id, &(data->cpuUsageTab_p))) break;
-            id++;
-        }
-        data->cores=cpus;
-
-        pthread_mutex_lock(&cpuUsageNodeDataMutex);
-        cpuUsageQueueAdd(&data);
-        pthread_mutex_unlock(&cpuUsageNodeDataMutex);
-
-        firstRun = false;
-        fclose(tempData);
-        tempData=NULL;
-        free(rawData);
-        rawData=NULL;        
-        
-        pthread_mutex_unlock(&rawDataMutex);
+        getData();       
     }
+}
+
+void getData(void){
+    unsigned int rawDataBuffSize = rawDataRingBufferGet(&rawDataPtr);
+    tempData = fmemopen(rawDataPtr, rawDataBuffSize, "r");
+    if(tempData == NULL){
+        fclose(tempData);
+        tempData = NULL;
+        free(rawDataPtr);
+        rawDataPtr = NULL;
+    }
+    int id=0;
+    CpuUsageNodeData*  data = calloc(1, sizeof(CpuUsageNodeData));
+    data->cpuUsageTab_p = calloc(cpus,sizeof(CpuUsage));
+    while(1){
+
+        if(!cpuParser(tempData, id, &(data->cpuUsageTab_p))) break;
+        id++;
+    }
+    data->cores=cpus;
+
+    pthread_mutex_lock(&cpuUsageNodeDataMutex);
+    cpuUsageQueueAdd(&data);
+    pthread_mutex_unlock(&cpuUsageNodeDataMutex);
+
+    firstRun = false;
+    fclose(tempData);
+    tempData=NULL;
+    free(rawDataPtr);
+    rawDataPtr=NULL; 
 }
 
 bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p){

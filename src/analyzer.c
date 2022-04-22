@@ -1,5 +1,3 @@
-#include "analyzer.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -7,6 +5,9 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#include "analyzer.h"
+#include "reader.h"
+#include "watchdog.h"
 
 typedef struct CpuStat{
     char name[CPU_ID_LEN];
@@ -14,6 +15,8 @@ typedef struct CpuStat{
     unsigned long long int nonIdleTime;
     unsigned long long int totalTime;
 }CpuStat;
+
+static WatchdogInst* analyzerWatchdog;
 
 CpuStat* cpuStatTabPrew;
 CpuStat* cpuStatTabCur;
@@ -30,6 +33,8 @@ void getData(void);
 bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p);
 
 void analyzerInit(void){
+    analyzerWatchdog = watchdogRegister("ANALYZER");
+    analyzerWatchdog->enable = true;
     pthread_create(&analyzerThreadID, NULL, analyzerThread, (void*)NULL);
 }
 
@@ -47,6 +52,7 @@ void analyzerDeinit(void){
 
 void* analyzerThread(void *arg){
     while(1){
+        analyzerWatchdog->wdt = 0;
         getData();       
     }
 }

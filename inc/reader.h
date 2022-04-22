@@ -18,6 +18,5 @@ unsigned int rawDataRingBufferGet(char** dataGet);
 
 void readerInit(void);
 void readerDeinit(void);
-void* readerThread(void *arg);
 
 #endif

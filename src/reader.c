@@ -1,6 +1,10 @@
 #include "reader.h"
+#include "watchdog.h"
 
 pthread_t readetThreadID;
+void* readerThread(void *arg);
+
+static WatchdogInst* readerWatchdog;
 
 typedef struct RawDataElement
 {
@@ -23,6 +27,8 @@ unsigned int rawDataSize;
 FILE* procStat = NULL;
 
 void readerInit(void){
+    readerWatchdog = watchdogRegister("READER");
+    readerWatchdog->enable = true;
     rawData=NULL;
     rawDataRingBufferInit();
     pthread_create(&readetThreadID, NULL, readerThread, (void*)NULL);
@@ -59,8 +65,9 @@ void readData(void){
 
 void* readerThread(void *arg){
     while (1){
+        readerWatchdog->wdt = 0;
         readData();
-        usleep(10000);
+        usleep(100000);
     }
 }
 

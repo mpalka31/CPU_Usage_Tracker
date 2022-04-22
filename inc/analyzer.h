@@ -1,7 +1,7 @@
 #ifndef ANALYZER_H
 #define ANALYZER_H
 
-#define CPU_ID_LEN    24
+#define CPU_ID_LEN    32
 
 #include <stdio.h>
 #include <unistd.h>
@@ -9,8 +9,6 @@
 #include <string.h>
 #include <pthread.h>
 #include <stdbool.h>
-
-#include "reader.h"
 
 typedef struct CpuUsage {
     char name[CPU_ID_LEN];

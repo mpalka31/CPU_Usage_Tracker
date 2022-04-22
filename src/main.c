@@ -8,6 +8,7 @@
 #include "reader.h"
 #include "analyzer.h"
 #include "printer.h"
+#include "watchdog.h"
 
 void sigHendler(int sig);
 
@@ -18,6 +19,7 @@ int main(void){
     readerInit();
     analyzerInit();
     printerInit();
+    watchdogInit();
 
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
@@ -27,19 +29,21 @@ int main(void){
     
     char c=getc(stdin);
     
+    printf("\nUSER TERMINATE\n");
     readerDeinit();
     analyzerDeinit();
     printerDeinit();
-    printf("\nUSER TERMINATE\n");
+    watchdogDeinit();
     return 0;
 }
 
 void sigHendler(int sig){
     if((sig==SIGINT)||(sig==SIGTERM)){
+        printf("\nSIGNAL TERMINATE\n");
         readerDeinit();
         analyzerDeinit();
         printerDeinit();
-        printf("\nSIGNAL TERMINATE\n");
+        watchdogDeinit();
         exit(0);
     }
 }

@@ -1,3 +1,13 @@
+/**
+ * @file main.c
+ * @author Michał Pałka
+ * @brief It is CUT (CPU Usage Tracker) application. It constantly scans uour CPU usage and display it every second in terminal window.
+ * @version 0.1
+ * @date 2022-04-23
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -11,8 +21,18 @@
 #include "watchdog.h"
 #include "logger.h"
 
+/**
+ * @brief sigHandler is function which handle intercepted signal. It can handle both SIGTERM and SIGINT signal.
+ * 
+ * @param sig Signal identifier
+ */
 void sigHendler(int sig);
 
+/**
+ * @brief Enty point of application. It initialize all components and wait for user input to exit.
+ * 
+ * @return int Application exit code. If closed correctly equals to 0, -1 on error exit. 
+ */
 int main(void){
     system("clear");
     printf("PRESS ENTER TO EXIT\n\n");

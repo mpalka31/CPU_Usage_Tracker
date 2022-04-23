@@ -1,3 +1,14 @@
+/**
+ * @file printer.c
+ * @author Michał Pałka
+ * @brief Implementation of API to interact with printer thread.
+ * @version 0.1
+ * @date 2022-04-23
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "printer.h"
 #include "analyzer.h"
 #include "watchdog.h"

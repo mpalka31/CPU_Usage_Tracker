@@ -1,7 +1,16 @@
+/**
+ * @file logger.c
+ * @author Michał Pałka
+ * @brief Implementation of API to interact with logger thread.
+ * @version 0.1
+ * @date 2022-04-23
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "logger.h"
 #include "watchdog.h"
-
-#define FILE_PATH   "./CUT_LOG.txt"
 
 static pthread_t loggerThreadID;
 void* loggerThread(void *arg);

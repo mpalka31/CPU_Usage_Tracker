@@ -1,3 +1,14 @@
+/**
+ * @file analyzer.c
+ * @author Michał Pałka
+ * @brief Implementation of API to interact with analyzer thread.
+ * @version 0.1
+ * @date 2022-04-23
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "analyzer.h"
 #include "reader.h"
 #include "watchdog.h"
@@ -12,6 +23,7 @@ typedef struct CpuStat{
 
 static WatchdogInst* analyzerWatchdog;
 static bool analyzerInitialized = false;
+void* analyzerThread(void *arg);
 
 static CpuStat* cpuStatTabPrew;
 static CpuStat* cpuStatTabCur;
@@ -120,7 +132,7 @@ bool cpuParser(FILE* tempData_p, unsigned long id, CpuUsage** cpuUsageTab_p){
     return true;
 }
 
-/*************************************************************/
+/*********************** FIFO QUEUE IMPLEMENTATION ***********************/
 
 typedef struct CpuUsageNode CpuUsageNode;
 typedef struct CpuUsageNode{

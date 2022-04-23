@@ -1,3 +1,14 @@
+/**
+ * @file watchdog.c
+ * @author Michał Pałka
+ * @brief Implementation of API to interact with watchdog thread.
+ * @version 0.1
+ * @date 2022-04-23
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "watchdog.h"
 #include "printer.h"
 #include "analyzer.h"

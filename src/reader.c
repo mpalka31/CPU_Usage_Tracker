@@ -1,3 +1,14 @@
+/**
+ * @file reader.c
+ * @author Michał Pałka
+ * @brief Implementation of API to interact with reader thread.
+ * @version 0.1
+ * @date 2022-04-23
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "reader.h"
 #include "watchdog.h"
 #include "logger.h"
@@ -83,7 +94,7 @@ void* readerThread(void *arg){
     }
 }
 
-/*****************************************************/
+/*********************** RING BUFFER IMPLEMENTATION ***********************/
 
 void rawDataRingBufferInit(void){
     pthread_mutex_init(&(rawDataRingBuffer.rawDataMutex), NULL);

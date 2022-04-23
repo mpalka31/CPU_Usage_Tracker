@@ -2,6 +2,7 @@
 #include "printer.h"
 #include "analyzer.h"
 #include "reader.h"
+#include "logger.h"
 
 #define WATCHDOG_TIMEOUT    (2e3)
 
@@ -11,21 +12,26 @@ static unsigned int watchdogCNT=0;
 
 pthread_t watchdogThreadID;
 void* watchdogThread(void *arg);
-// static WatchdogInst selfWatchdog={0, false, {0}, NULL};   // Unnecessary from practical point of view. Uset only to simplyfiy logic.
+
 static WatchdogInst* watchdogHead = NULL;
+static bool watchdogInitialized = false;
 
 void watchdogInit(void){
     pthread_create(&watchdogThreadID, NULL, watchdogThread, (void*)NULL);
+    watchdogInitialized = true;
+    logINFO("WATCHDOG", "initialized");
 }
 
 void watchdogDeinit(void){
+    if(!watchdogInitialized) return;
     pthread_cancel(watchdogThreadID);
     for(int i = 0; i < watchdogCNT; i++){
         WatchdogInst* tmpWtdPTR = watchdogHead->nextWatchdogInst;
         free(watchdogHead);
         watchdogHead = tmpWtdPTR;
     }
-
+    watchdogInitialized = false;
+    logINFO("WATCHDOG", "deinitialized");
 }
 
 WatchdogInst* watchdogRegister(const char * info){
@@ -49,11 +55,12 @@ void watchdogHandle(void){
         for(int i = 0; i < watchdogCNT; i++){
             if(watchdogPtr->enable){
                 if(watchdogPtr->wdt>WATCHDOG_TIMEOUT){
-                    printf("\nWATCHDOG TERMINATE CAUSED BY:\t%s\n", watchdogPtr->info);
+                    logERROR(watchdogPtr->info, "WDT overflow");
                     readerDeinit();
                     analyzerDeinit();
                     printerDeinit();
                     watchdogDeinit();
+                    loggerDeinit();
                     exit(-1);
                 }
             }

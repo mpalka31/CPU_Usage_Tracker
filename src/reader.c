@@ -1,10 +1,12 @@
 #include "reader.h"
 #include "watchdog.h"
+#include "logger.h"
 
 pthread_t readetThreadID;
 void* readerThread(void *arg);
 
 static WatchdogInst* readerWatchdog;
+static bool readerInitialized = false;
 
 typedef struct RawDataElement
 {
@@ -32,12 +34,17 @@ void readerInit(void){
     rawData=NULL;
     rawDataRingBufferInit();
     pthread_create(&readetThreadID, NULL, readerThread, (void*)NULL);
+    readerInitialized = true;
+    logINFO("READER", "initialized");
 }
 
 void readerDeinit(void){
+    if(!readerInitialized) return;
     pthread_cancel(readetThreadID);
     if(rawData!=NULL) free(rawData);
     if(procStat!=NULL) fclose(procStat);
+    readerInitialized = false;
+    logINFO("READER", "deinitialized");
 }
 
 void readData(void){

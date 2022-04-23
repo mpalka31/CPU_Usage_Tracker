@@ -9,6 +9,7 @@
 #include "analyzer.h"
 #include "printer.h"
 #include "watchdog.h"
+#include "logger.h"
 
 void sigHendler(int sig);
 
@@ -16,10 +17,11 @@ int main(void){
     system("clear");
     printf("PRESS ENTER TO EXIT\n\n");
     
+    loggerInit();
+    watchdogInit();
     readerInit();
     analyzerInit();
     printerInit();
-    watchdogInit();
 
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
@@ -29,21 +31,23 @@ int main(void){
     
     char c=getc(stdin);
     
-    printf("\nUSER TERMINATE\n");
+    logINFO("MAIN", "\tENTER pressed, rerminate");
     readerDeinit();
     analyzerDeinit();
     printerDeinit();
     watchdogDeinit();
+    loggerDeinit();
     return 0;
 }
 
 void sigHendler(int sig){
     if((sig==SIGINT)||(sig==SIGTERM)){
-        printf("\nSIGNAL TERMINATE\n");
+        logWARNING("MAIN", "SIGNAL intercepted, rerminate");
         readerDeinit();
         analyzerDeinit();
         printerDeinit();
         watchdogDeinit();
+        loggerDeinit();
         exit(0);
     }
 }

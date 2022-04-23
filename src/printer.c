@@ -1,6 +1,7 @@
 #include "printer.h"
 #include "analyzer.h"
 #include "watchdog.h"
+#include "logger.h"
 
 pthread_t printerThreadID;
 void* printerThread(void *arg);
@@ -8,6 +9,7 @@ void* printerThread(void *arg);
 void printerPrint(void);
 
 static WatchdogInst* printerWatchdog;
+static bool printerInitialized = false;
 
 struct timeval tv;
 unsigned long timestamp1;
@@ -19,10 +21,15 @@ void printerInit(){
     printerWatchdog = watchdogRegister("PRINTER");
     printerWatchdog->enable=true;
     pthread_create(&printerThreadID, NULL, printerThread, (void*)NULL);
+    printerInitialized = true;
+    logINFO("PRINTER", "initialized");
 }
 
 void printerDeinit(){
+    if(!printerInitialized) return;
     pthread_cancel(printerThreadID);
+    printerInitialized = false;
+    logINFO("PRINTER", "deinitialized");
 }
 
 void* printerThread(void *arg){

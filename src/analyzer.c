@@ -1,13 +1,7 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
-#include <stdbool.h>
-
 #include "analyzer.h"
 #include "reader.h"
 #include "watchdog.h"
+#include "logger.h"
 
 typedef struct CpuStat{
     char name[CPU_ID_LEN];
@@ -17,6 +11,7 @@ typedef struct CpuStat{
 }CpuStat;
 
 static WatchdogInst* analyzerWatchdog;
+static bool analyzerInitialized = false;
 
 CpuStat* cpuStatTabPrew;
 CpuStat* cpuStatTabCur;
@@ -36,9 +31,12 @@ void analyzerInit(void){
     analyzerWatchdog = watchdogRegister("ANALYZER");
     analyzerWatchdog->enable = true;
     pthread_create(&analyzerThreadID, NULL, analyzerThread, (void*)NULL);
+    analyzerInitialized = true;
+    logINFO("ANALYZER", "initialized");
 }
 
 void analyzerDeinit(void){
+    if(!analyzerInitialized) return;
     pthread_cancel(analyzerThreadID);
     pthread_mutex_destroy(&cpuUsageNodeDataMutex);
     if(tempData!=NULL) fclose(tempData);
@@ -48,6 +46,8 @@ void analyzerDeinit(void){
         if(!cpuUsageQueueDelete())break;
     }
     rawDataRingBufferDeinit();
+    analyzerInitialized = false;
+    logINFO("ANALYZER", "deinitialized");
 }
 
 void* analyzerThread(void *arg){

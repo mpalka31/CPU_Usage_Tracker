@@ -3,7 +3,7 @@
 #include "watchdog.h"
 #include "logger.h"
 
-pthread_t printerThreadID;
+static pthread_t printerThreadID;
 void* printerThread(void *arg);
 
 void printerPrint(void);
@@ -11,11 +11,9 @@ void printerPrint(void);
 static WatchdogInst* printerWatchdog;
 static bool printerInitialized = false;
 
-struct timeval tv;
-unsigned long timestamp1;
-unsigned long timestamp2;
-
-extern pthread_mutex_t cpuUsageNodeDataMutex;
+static struct timeval tv;
+static long timestamp1;
+static long timestamp2;
 
 void printerInit(){
     printerWatchdog = watchdogRegister("PRINTER");
@@ -33,9 +31,10 @@ void printerDeinit(){
 }
 
 void* printerThread(void *arg){
+    (void) arg;
     while(1){
         printerWatchdog->wdt = 0;
-        usleep(1e6-(timestamp2-timestamp1));
+        usleep((unsigned int)1e6-(unsigned int)(timestamp2-timestamp1));
         timestamp1 = 1000000 * tv.tv_sec + tv.tv_usec;
         printerPrint();
         timestamp2 = 1000000 * tv.tv_sec + tv.tv_usec;
@@ -43,20 +42,22 @@ void* printerThread(void *arg){
 }
 
 void printerPrint(void){
-    CpuUsageNodeData* tempNodeData;
-    CpuUsage* tempUsage;
+    CpuUsageNodeData* tempNodeData = NULL;
+    CpuUsage* tempUsage = NULL;
     int cnt=0;
-    int cores;
+    unsigned long cores=0;
     pthread_mutex_lock(&cpuUsageNodeDataMutex);
     while((tempNodeData = cpuUsageQueueRead())!=NULL){
         if(cnt==0){
             cores = tempNodeData->cores;
             tempUsage = calloc(cores, sizeof(CpuUsage));
         }
-        for(int i = 0; i < cores; i++){
+        for(unsigned long i = 0; i < cores; i++){
             memcpy(tempUsage[i].name, (tempNodeData->cpuUsageTab_p)[i].name, CPU_ID_LEN);
             if(!isnan((tempNodeData->cpuUsageTab_p)[i].usage)){
                 tempUsage[i].usage=tempUsage[i].usage+(tempNodeData->cpuUsageTab_p)[i].usage;
+            }else{
+                logWARNING("PRINTER", "NaN as CPU usage");
             }
         }
         cnt++;
@@ -65,8 +66,8 @@ void printerPrint(void){
     pthread_mutex_unlock(&cpuUsageNodeDataMutex);
     system("clear");
     printf("PRESS ENTER TO EXIT\n\n");
-    for(int i = 0; i<cores; i++){
-        tempUsage[i].usage=tempUsage[i].usage/(float)cnt;
+    for(unsigned long i = 0; i<cores; i++){
+        tempUsage[i].usage=tempUsage[i].usage/(double)cnt;
         printf("%s\tusage:\t%.2f%%\n", tempUsage[i].name, tempUsage[i].usage);
     }
     free(tempUsage);

@@ -10,6 +10,8 @@
 #include <sys/time.h>
 #include <math.h>
 
+#include "analyzer.h"
+
 void printerInit(void);
 void printerDeinit(void);
 

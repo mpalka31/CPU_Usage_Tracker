@@ -13,21 +13,20 @@ typedef struct CpuStat{
 static WatchdogInst* analyzerWatchdog;
 static bool analyzerInitialized = false;
 
-CpuStat* cpuStatTabPrew;
-CpuStat* cpuStatTabCur;
+static CpuStat* cpuStatTabPrew;
+static CpuStat* cpuStatTabCur;
 static bool firstRun = true;
-static int cpus = 0;
-pthread_t analyzerThreadID;
+static unsigned long cpus = 0;
+static pthread_t analyzerThreadID;
 
-pthread_mutex_t cpuUsageNodeDataMutex = PTHREAD_MUTEX_INITIALIZER;
-
-FILE* tempData = NULL;
-char* rawDataPtr=NULL;
+static FILE* tempData = NULL;
+static char* rawDataPtr=NULL;
 
 void getData(void);
-bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p);
+bool cpuParser(FILE* tempData, unsigned long id, CpuUsage** cpuUsageTab_p);
 
 void analyzerInit(void){
+    pthread_mutex_init(&(cpuUsageNodeDataMutex), NULL);
     analyzerWatchdog = watchdogRegister("ANALYZER");
     analyzerWatchdog->enable = true;
     pthread_create(&analyzerThreadID, NULL, analyzerThread, (void*)NULL);
@@ -51,6 +50,7 @@ void analyzerDeinit(void){
 }
 
 void* analyzerThread(void *arg){
+    (void) arg;
     while(1){
         analyzerWatchdog->wdt = 0;
         getData();       
@@ -65,8 +65,9 @@ void getData(void){
         tempData = NULL;
         free(rawDataPtr);
         rawDataPtr = NULL;
+        logWARNING("ANALYZER", "fmemopen() cannot open buffer");
     }
-    int id=0;
+    unsigned long id=0;
     CpuUsageNodeData*  data = calloc(1, sizeof(CpuUsageNodeData));
     data->cpuUsageTab_p = calloc(cpus,sizeof(CpuUsage));
     while(1){
@@ -87,25 +88,25 @@ void getData(void){
     rawDataPtr=NULL; 
 }
 
-bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p){
+bool cpuParser(FILE* tempData_p, unsigned long id, CpuUsage** cpuUsageTab_p){
     char cpu[CPU_ID_LEN]={0};
     unsigned long long int user, nice, system, idle, ioWait, irq, softIrq, steal, guest, guestNice;
-    int matched = fscanf(tempData, "%s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", cpu, &user, &nice, &system, &idle, &ioWait, &irq, &softIrq, &steal, &guest, &guestNice);
+    int matched = fscanf(tempData_p, "%s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", cpu, &user, &nice, &system, &idle, &ioWait, &irq, &softIrq, &steal, &guest, &guestNice);
     if((strncmp(cpu, "cpu", 3)!=0)||(matched!=11)) return false;
     if(firstRun){
         cpus = id+1;
         CpuStat* cpuStatTabCur_temp=calloc(cpus, sizeof(CpuStat));
-        memcpy(cpuStatTabCur_temp, cpuStatTabCur, id*sizeof(CpuStat));
+        memcpy(cpuStatTabCur_temp, cpuStatTabCur, (unsigned long)id*sizeof(CpuStat));
         free(cpuStatTabCur);
         cpuStatTabCur=cpuStatTabCur_temp;
 
         CpuStat* cpuStatTabPrew_temp=calloc(cpus, sizeof(CpuStat));
-        memcpy(cpuStatTabPrew_temp, cpuStatTabPrew, id*sizeof(CpuStat));
+        memcpy(cpuStatTabPrew_temp, cpuStatTabPrew, (unsigned long)id*sizeof(CpuStat));
         free(cpuStatTabPrew);
         cpuStatTabPrew=cpuStatTabPrew_temp;
 
         CpuUsage* cpuUsageTab_temp=calloc(cpus, sizeof(CpuUsage));
-        memcpy(cpuUsageTab_temp, *cpuUsageTab_p, id*sizeof(CpuUsage));
+        memcpy(cpuUsageTab_temp, *cpuUsageTab_p, (unsigned long)id*sizeof(CpuUsage));
         free(*cpuUsageTab_p);
         *cpuUsageTab_p=cpuUsageTab_temp;
     }
@@ -114,7 +115,7 @@ bool cpuParser(FILE* tempData, int id, CpuUsage** cpuUsageTab_p){
     cpuStatTabCur[id].idleTime = idle + ioWait;
     cpuStatTabCur[id].nonIdleTime = user + nice + system + irq + softIrq + steal;
     cpuStatTabCur[id].totalTime =  cpuStatTabCur[id].idleTime + cpuStatTabCur[id].nonIdleTime;
-    (*cpuUsageTab_p)[id].usage = (float)(cpuStatTabCur[id].nonIdleTime-cpuStatTabPrew[id].nonIdleTime)*100.0/(float)(cpuStatTabCur[id].totalTime-cpuStatTabPrew[id].totalTime);
+    (*cpuUsageTab_p)[id].usage = (double)(cpuStatTabCur[id].nonIdleTime-cpuStatTabPrew[id].nonIdleTime)*100.0/(double)(cpuStatTabCur[id].totalTime-cpuStatTabPrew[id].totalTime);
     memcpy((*cpuUsageTab_p)[id].name, cpu, CPU_ID_LEN);
     return true;
 }
@@ -126,7 +127,7 @@ typedef struct CpuUsageNode{
     CpuUsageNode* next;
     CpuUsageNodeData* data;
 }CpuUsageNode;
-CpuUsageNode* head=NULL;
+static CpuUsageNode* head=NULL;
 
 void cpuUsageQueueAdd(CpuUsageNodeData** newNodeData){
     if(head==NULL){

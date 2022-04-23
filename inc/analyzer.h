@@ -12,11 +12,11 @@
 
 typedef struct CpuUsage {
     char name[CPU_ID_LEN];
-    float usage;
+    double usage;
 } CpuUsage;
 
 typedef struct CpuUsageNodeData{
-    int cores;
+    unsigned long cores;
     CpuUsage* cpuUsageTab_p;
 }CpuUsageNodeData;
 
@@ -24,6 +24,7 @@ void cpuUsageQueueAdd(CpuUsageNodeData** newNodeData);
 CpuUsageNodeData* cpuUsageQueueRead(void);
 int cpuUsageQueueDelete(void);
 
+static pthread_mutex_t cpuUsageNodeDataMutex;
 
 void analyzerInit(void);
 void analyzerDeinit(void);

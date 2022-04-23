@@ -29,9 +29,10 @@ int main(void){
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
     
-    char c=getc(stdin);
+    int c = getc(stdin);
+    (void)c;
     
-    logINFO("MAIN", "\tENTER pressed, rerminate");
+    logINFO("MAIN", "\tENTER pressed, application terminate");
     readerDeinit();
     analyzerDeinit();
     printerDeinit();
@@ -42,7 +43,7 @@ int main(void){
 
 void sigHendler(int sig){
     if((sig==SIGINT)||(sig==SIGTERM)){
-        logWARNING("MAIN", "SIGNAL intercepted, rerminate");
+        logWARNING("MAIN", "SIGNAL intercepted, application rerminate");
         readerDeinit();
         analyzerDeinit();
         printerDeinit();

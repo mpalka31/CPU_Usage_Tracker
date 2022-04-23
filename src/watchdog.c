@@ -10,7 +10,7 @@ void watchdogHandle(void);
 
 static unsigned int watchdogCNT=0;
 
-pthread_t watchdogThreadID;
+static pthread_t watchdogThreadID;
 void* watchdogThread(void *arg);
 
 static WatchdogInst* watchdogHead = NULL;
@@ -25,7 +25,7 @@ void watchdogInit(void){
 void watchdogDeinit(void){
     if(!watchdogInitialized) return;
     pthread_cancel(watchdogThreadID);
-    for(int i = 0; i < watchdogCNT; i++){
+    for(unsigned int i = 0; i < watchdogCNT; i++){
         WatchdogInst* tmpWtdPTR = watchdogHead->nextWatchdogInst;
         free(watchdogHead);
         watchdogHead = tmpWtdPTR;
@@ -44,6 +44,7 @@ WatchdogInst* watchdogRegister(const char * info){
 }
 
 void* watchdogThread(void *arg){
+    (void) arg;
     while(1){
         usleep(1e3);
         watchdogHandle();
@@ -52,10 +53,11 @@ void* watchdogThread(void *arg){
 
 void watchdogHandle(void){
         WatchdogInst* watchdogPtr = watchdogHead;
-        for(int i = 0; i < watchdogCNT; i++){
+        for(unsigned int i = 0; i < watchdogCNT; i++){
             if(watchdogPtr->enable){
                 if(watchdogPtr->wdt>WATCHDOG_TIMEOUT){
                     logERROR(watchdogPtr->info, "WDT overflow");
+                    logERROR("WATCHDOG", "WDT overflow detected, wxit witch -1 code");
                     readerDeinit();
                     analyzerDeinit();
                     printerDeinit();

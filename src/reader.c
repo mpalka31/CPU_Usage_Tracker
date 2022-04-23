@@ -2,7 +2,7 @@
 #include "watchdog.h"
 #include "logger.h"
 
-pthread_t readetThreadID;
+static pthread_t readetThreadID;
 void* readerThread(void *arg);
 
 static WatchdogInst* readerWatchdog;
@@ -10,8 +10,9 @@ static bool readerInitialized = false;
 
 typedef struct RawDataElement
 {
-    char* data;
     unsigned int dataSize;
+    int dummy;      // dummy int to prevent padding struct warning message
+    char* data;
 }RawDataElement;
 
 typedef struct RawDataRingBuffer{
@@ -24,9 +25,9 @@ typedef struct RawDataRingBuffer{
 } RawDataRingBuffer;
 static RawDataRingBuffer rawDataRingBuffer;
 
-char* rawData;
-unsigned int rawDataSize;
-FILE* procStat = NULL;
+static char* rawData;
+static unsigned int rawDataSize;
+static FILE* procStat = NULL;
 
 void readerInit(void){
     readerWatchdog = watchdogRegister("READER");
@@ -47,7 +48,7 @@ void readerDeinit(void){
     logINFO("READER", "deinitialized");
 }
 
-void readData(void){
+static void readData(void){
     procStat = fopen("/proc/stat", "r");
     if(procStat != NULL){
         rawDataSize=0;
@@ -61,16 +62,20 @@ void readData(void){
             procStat = NULL;
             free(rawData);
             rawData=NULL;
+            logWARNING("READER", "fread() returned size mismatch");
             return;
         }
         fclose(procStat);
         procStat = NULL;
         rawDataRingBufferPut(&rawData, rawDataSize);
         rawData = NULL;
+    }else{
+        logWARNING("READER", "cannot open /proc/stat");
     }
 }
 
 void* readerThread(void *arg){
+    (void) arg;
     while (1){
         readerWatchdog->wdt = 0;
         readData();

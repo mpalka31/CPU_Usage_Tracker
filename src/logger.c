@@ -3,14 +3,14 @@
 
 #define FILE_PATH   "./CUT_LOG.txt"
 
-pthread_t loggerThreadID;
+static pthread_t loggerThreadID;
 void* loggerThread(void *arg);
 
 static WatchdogInst* loggerWatchdog;
 static bool loggerInitialized = false;
-pthread_mutex_t loggerMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t loggerMutex = PTHREAD_MUTEX_INITIALIZER;
 
-FILE* logFile = NULL;
+static FILE* logFile = NULL;
 
 void loggerInit(void){
     pthread_mutex_lock(&loggerMutex);
@@ -52,6 +52,7 @@ void logERROR(const char* source, const char* ERROR){
 }
 
 void* loggerThread(void *arg){
+    (void) arg;
     while((logFile = fopen(FILE_PATH, "w")) == NULL);
     pthread_mutex_unlock(&loggerMutex);
     while (1){

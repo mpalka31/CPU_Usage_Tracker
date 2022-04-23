@@ -12,10 +12,14 @@
 
 typedef struct WatchdogInst WatchdogInst;
 typedef struct WatchdogInst{
-    unsigned int wdt;
     bool enable;
+    // 3 dummy bool to prevent padding struct warning message
+    bool dummy1;
+    bool dummy2;
+    bool dummy3;
+    unsigned int wdt;
     char info[INFO_LEN];
-    struct WatchdogInst* nextWatchdogInst;
+    WatchdogInst* nextWatchdogInst;
 }WatchdogInst;
 
 
